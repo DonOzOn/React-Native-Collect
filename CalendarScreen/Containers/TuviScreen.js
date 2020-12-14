@@ -1,5 +1,6 @@
 import 'moment/locale/vi'; // without this line it didn't work
 
+import { CalendarChinese, CalendarVietnamese } from 'date-chinese';
 import {
     Dimensions,
     Image,
@@ -32,7 +33,6 @@ import {
     dowEN
 } from '../Transforms/LunarWord'
 
-import { CalendarChinese } from 'date-chinese';
 import OpenSansSemiBoldText from '../../../../base/components/Text/OpenSansSemiBoldText';
 import OpenSansText from '../../../../base/components/Text/OpenSansText';
 import configuration from '../../../../configuration';
@@ -45,7 +45,7 @@ const { width, height } = Dimensions.get('window');
 class TuviScreen extends Component {
     constructor(props) {
         super(props);
-        this.cal = new CalendarChinese();
+        this.cal = new CalendarVietnamese();
         this.state = {
             markedDates: {},
             selectedDate: {
@@ -449,7 +449,7 @@ class TuviScreen extends Component {
                                             }}>
 
                                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                    <Image source={Language === 'vi'
+                                                    <Image key={indexOf} source={Language === 'vi'
                                                         ? this.returnAnimalImage(text.split(" ")[0])
                                                         : this.returnAnimalImageEN(text.split(" ")[0])
                                                     }
@@ -496,7 +496,7 @@ class TuviScreen extends Component {
 
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', }}>
                                                     {/* <Text>{text.split(" ")[0]}</Text> */}
-                                                    <Image source={Language === 'vi'
+                                                    <Image key={indexOf} source={Language === 'vi'
                                                         ? this.returnAnimalImage(text.split(" ")[0])
                                                         : this.returnAnimalImageEN(text.split(" ")[0])
                                                     }
@@ -537,7 +537,7 @@ class TuviScreen extends Component {
                             {ceremoney == null || ceremoney.length == 0 ? <OpenSansText style={styles.emptyText}>{formatMessage(message.noEvents)}</OpenSansText> : <View>
                                 {ceremoney.map(cere =>
                                     <View style={styles.ceremoneyContainer}>
-                                        <View style={{alignItems:'center', flexDirection:'row'}}>
+                                        <View style={{ alignItems: 'center', flexDirection: 'row' }}>
                                             <View
                                                 style={[styles.dot, { backgroundColor: '#004cff', marginRight: 5 }]}
                                             />

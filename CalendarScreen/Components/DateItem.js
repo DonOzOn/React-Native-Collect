@@ -1,10 +1,9 @@
-import { Dimensions, Platform, Text, View } from 'react-native';
+import { Dimensions, Platform, Text, TouchableOpacity, View } from 'react-native';
 import React, { Component, PureComponent } from 'react';
 import { ceremony, ceremonyHightLight, ceremonyLunar, ceremonyLunarHightLight } from '../Fixtures/ceremony';
 
 import OpenSansSemiBoldText from '../../../../base/components/Text/OpenSansSemiBoldText';
 import OpenSansText from '../../../../base/components/Text/OpenSansText';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import colors from '../Themes/Colors';
 import moment from 'moment';
 import styles from './Styles/DateItemStyle';
@@ -25,6 +24,7 @@ export default class DateItem extends Component {
             .date(this.props.date.day);
         this.isSunday = now.isoWeekday() == 7;
     }
+    
     shouldComponentUpdate(nextProps, nextState) {
         return this.props.state !== nextProps.state;
     }
@@ -72,7 +72,7 @@ export default class DateItem extends Component {
             <TouchableOpacity
                 onPress={() => {
                     onPress(date);
-                    this.onCeremoney(listCeremon);
+                    // this.onCeremoney(listCeremon);
                 }}
                 style={{
                     height: width / 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', backgroundColor:
@@ -81,6 +81,7 @@ export default class DateItem extends Component {
                             : colors.transparent, borderRadius: 8, width: width / 10,
                     marginTop: Platform.OS === 'android' ? -3 : 0
                 }}
+                hitSlop={{top: 5, bottom: 5, left: 5, right: 5}}
                 activeOpacity={1}>
                 <View
                     style={{

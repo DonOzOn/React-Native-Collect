@@ -1,10 +1,9 @@
-import { Dimensions, Platform, Text, View } from 'react-native';
+import { Dimensions, Platform, Text, TouchableOpacity, View } from 'react-native';
 import React, { Component, PureComponent } from 'react';
 import { ceremony, ceremonyHightLight, ceremonyLunar, ceremonyLunarHightLight } from '../Fixtures/ceremony';
 
 import OpenSansSemiBoldText from '../../../../base/components/Text/OpenSansSemiBoldText';
 import OpenSansText from '../../../../base/components/Text/OpenSansText';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import colors from '../Themes/Colors';
 import moment from 'moment';
 import styles from './Styles/DateItemStyle';
@@ -74,13 +73,13 @@ export default class DateItemWeek extends Component {
         if (cereMap) {
             listCeremon.push(cereMap);
         }
-
         return (
             <TouchableOpacity
                 onPress={() => {
                     onPress(date);
                     // this.onCeremoney(listCeremon);
                 }}
+                hitSlop={{top:5, bottom: 5, left: 5, right: 5}}
                 style={{
                     height:width / 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', backgroundColor:
                         state === 'selected'

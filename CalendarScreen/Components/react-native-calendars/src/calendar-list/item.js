@@ -62,6 +62,7 @@ class CalendarListItem extends Component {
           theme={this.props.theme}
           style={[{height: this.props.calendarHeight, width: this.props.calendarWidth}, this.style.calendar, this.props.style]}
           current={row}
+          currentDate={this.props.currentDate}
           hideArrows={this.props.hideArrows}
           hideExtraDays={this.props.hideExtraDays}
           disableMonthChange

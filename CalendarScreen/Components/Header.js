@@ -54,7 +54,7 @@ export default class Header extends Component {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.center}>
-                    <TouchableOpacity style={styles.center} onPress={this.selectDate} hitSlop={{ top: 50, bottom: 50, left: 50, right: 50 }}>
+                    <TouchableOpacity style={styles.center} onPress={this.selectDate} hitSlop={{ top: 20, bottom: 20, left: 50, right: 50 }}>
                         {Language === 'vi' ?
                             <OpenSansSemiBoldText style={styles.textCenter}> {dateString ? moment(dateString).format("DD") : this.day} tháng {monthSelect && monthSelect < 10 ? `0${monthSelect}` : `${monthSelect}`}, {yearSelect} </OpenSansSemiBoldText>
                             : <OpenSansSemiBoldText style={styles.textCenter}>{moment(dateString).locale('en').format("MMM DD")}, {moment(dateString).format("YYYY")} </OpenSansSemiBoldText>

@@ -28,8 +28,9 @@ export class ConvertModal extends Component {
     }
 
     selectDate = (date) => {
+        // this.back()
         this.props.changeDate(date);
-        this.back()
+
     }
 
 
@@ -46,14 +47,17 @@ export class ConvertModal extends Component {
         return (
             <Modal
                 isVisible={isVisible}
-                hideModalContentWhileAnimating={true}
-                animationIn={"slideInUp"}
-                animationOut={"fadeOutDown"}
                 useNativeDriver={true}
                 onBackdropPress={  this.backToWelcome}
                 onRequestClose={() => {
                     this.backToWelcome()
                 }}
+                hasBackdrop={true}
+                transparent={true}
+                backdropOpacity={0.5}
+                animationInTiming={300}
+                animationOutTiming={700}
+                onModalHide={this.back}
                 style={{ justifyContent: 'flex-end', margin: 0 }}
                 onDismiss={this.back}>
                 <View style={styles.modalContainer}>

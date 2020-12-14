@@ -4,10 +4,12 @@ import {
     Animated,
     Dimensions,
     InteractionManager,
+    Platform,
     SafeAreaView,
     Text,
-    View
+    View,
 } from 'react-native';
+import { CalendarChinese, CalendarVietnamese } from 'date-chinese';
 import React, { Component } from 'react';
 import {
     calculateChiofDay,
@@ -16,8 +18,8 @@ import {
 } from '../Transforms/ConvertToCanchi';
 import { ceremony, ceremonyLunar } from '../Fixtures/ceremony';
 import { injectIntl, intlShape } from 'react-intl';
+import { screenHeight, screenWidth } from 'react-native-calendars/src/expandableCalendar/commons';
 
-import { CalendarChinese } from 'date-chinese';
 import CalendarList from '../Components/react-native-calendars/src/calendar-list/index'
 import CalendarProvider from '../Components/react-native-calendars/src/expandableCalendar/calendarProvider';
 import ConvertModal from '../Components/ConvertModal';
@@ -34,7 +36,6 @@ import _ from 'lodash';
 import configuration from '../../../../configuration';
 import message from '../../../../core/msg/calendar';
 import moment from 'moment';
-import { screenWidth } from 'react-native-calendars/src/expandableCalendar/commons';
 import styles from './Styles/CalendarScreenStyle';
 import testIDs from '../Components/react-native-calendars/src/testIDs';
 
@@ -79,7 +80,7 @@ LocaleConfig.defaultLocale = 'vn';
 class CalendarScreen extends Component {
     constructor(props) {
         super(props);
-        this.cal = new CalendarChinese();
+        this.cal = new CalendarVietnamese();
         this.state = {
             markedDates: {},
             selectedDate: {
@@ -176,7 +177,7 @@ class CalendarScreen extends Component {
         this.setState({ listWeek: listWeek, currentMonDay: this.getMonday(monday) })
     }
 
-    renderDate = data => {
+    renderDate = (data) => {
         const { Language } = configuration
         this.cal.fromGregorian(data.date.year, data.date.month, data.date.day);
         let [, , month, , lunarDay] = this.cal.get();
@@ -229,18 +230,23 @@ class CalendarScreen extends Component {
     };
 
     onSelectedDate = (day) => {
+        if (day.month !== this.state.selectedDate.month) {
+            this.calendarList.scrollToDay(moment(day.dateString).format('YYYY-MM-DD'), 0, false)
+        }
         this.setState({
             selectedDate: day,
-            markedDates: { [day.dateString]: { selected: true } },
             monthSelect: day.month,
             yearSelect: day.year,
         }, () => {
-            this.setState({ selectedDateWeek: day, markedDatesWeek: { [day.dateString]: { selected: true } }, })
+            this.setState({ selectedDateWeek: day }, () => {
+                this.getCeremoney(day.year, day.month, day.day)
+            })
+
         });
+
     };
     onCeremoney = (list) => {
         this.setState({ listCeremoney: list })
-
     }
 
     onLichAm = () => {
@@ -337,7 +343,7 @@ class CalendarScreen extends Component {
     }
 
     changeDate = (date) => {
-        console.log('date', date)
+        this.calendarList.scrollToDay(moment(new Date(date)).format('YYYY-MM-DD'), 1, false)
         this.setState({
             selectedDateWeek: {
                 day: moment(date).date(),
@@ -348,8 +354,8 @@ class CalendarScreen extends Component {
             },
             monthSelect: moment(date).month() + 1,
             yearSelect: moment(date).year(),
-            change: false
-
+            change: false,
+            isVisible: false,
         }, () => {
             this.getCeremoney(moment(date).year(), moment(date).month() + 1, moment(date).date());
             this.setState({
@@ -358,7 +364,8 @@ class CalendarScreen extends Component {
                     month: moment(date).month() + 1,
                     year: moment(date).year(),
                     dateString: moment(new Date(date)).format('YYYY-MM-DD'),
-                }
+                },
+
             })
         })
     }
@@ -390,6 +397,7 @@ class CalendarScreen extends Component {
     };
 
     todaySelect = () => {
+        this.calendarList.scrollToDay(moment().format('YYYY-MM-DD'), 1, false)
         this.getCeremoney(moment().year(), moment().month() + 1, moment().date());
         this.setState({
             selectedDate: {
@@ -409,6 +417,7 @@ class CalendarScreen extends Component {
                     dateString: moment().format('YYYY-MM-DD'),
                 }
             })
+
         })
     }
     _onMomentumScrollEnd = ({ nativeEvent }) => {
@@ -489,46 +498,49 @@ class CalendarScreen extends Component {
     }
 
     monthChange = (monthValue) => {
-        // let dateString;
-        // let dayBefore = parseInt(moment(this.state.selectedDate.dateString, 'YYYY-MM-DD').format('DD'), 10);
-        // let dayAfter = parseInt(moment(monthValue.dateString, 'YYYY-MM-DD').endOf('month').format('DD'), 10);
-        // //check date select out range of month
-        // if (dayBefore <= dayAfter) {
-        //     // go to date current
-        //     dateString = monthValue.year + '-'
-        //         + moment(monthValue.dateString, 'YYYY-MM-DD').format('MM') + '-'
-        //         + moment(this.state.selectedDate.dateString, 'YYYY-MM-DD').format('DD');
+        let dateString;
+        let dayBefore = parseInt(moment(this.state.selectedDate.dateString, 'YYYY-MM-DD').format('DD'), 10);
+        let dayAfter = parseInt(moment(monthValue.dateString, 'YYYY-MM-DD').endOf('month').format('DD'), 10);
+        //check date select out range of month
+        if (dayBefore <= dayAfter) {
+            // go to date current
+            dateString = monthValue.year + '-'
+                + moment(monthValue.dateString, 'YYYY-MM-DD').format('MM') + '-'
+                + moment(this.state.selectedDate.dateString, 'YYYY-MM-DD').format('DD');
 
-        // } else {
-        //     // go to end of month after
-        //     dateString = monthValue.year + '-'
-        //         + moment(monthValue.dateString, 'YYYY-MM-DD').format('MM') + '-'
-        //         + moment(monthValue.dateString, 'YYYY-MM-DD').endOf('month').format('DD');
-        // }
+        } else {
+            // go to end of month after
+            dateString = monthValue.year + '-'
+                + moment(monthValue.dateString, 'YYYY-MM-DD').format('MM') + '-'
+                + moment(monthValue.dateString, 'YYYY-MM-DD').endOf('month').format('DD');
+        }
         // // if (moment(monthValue.dateString).month() + 1 !== this.state.selectedDate.month) {
-        // this.setState({
-        //     monthSelect: monthValue.month, yearSelect: monthValue.year,
-        //     selectedDate: {
-        //         day: moment(dateString, 'YYYY-MM-DD').date(),
-        //         month: moment(monthValue.dateString).month() + 1,
-        //         year: moment(monthValue.dateString).year(),
-        //         dateString: moment(dateString).format('YYYY-MM-DD'),
+        this.setState({
+            monthSelect: monthValue.month, yearSelect: monthValue.year,
+            selectedDate: {
+                day: moment(dateString, 'YYYY-MM-DD').date(),
+                month: moment(monthValue.dateString).month() + 1,
+                year: moment(monthValue.dateString).year(),
+                dateString: moment(dateString).format('YYYY-MM-DD'),
 
-        //     },
-        // }, () => {
-        //     // get ceremoney of curr date
-        //     this.getCeremoney(monthValue.year, monthValue.month, this.state.selectedDate.day);
-        //     this.setState({
-        //         selectedDateWeek: {
-        //             day: moment(dateString, 'YYYY-MM-DD').date(),
-        //             month: moment(monthValue.dateString).month() + 1,
-        //             year: moment(monthValue.dateString).year(),
-        //             dateString: moment(dateString).format('YYYY-MM-DD'),
+            },
+        }, () => {
+            this.setState({
+                selectedDateWeek: {
+                    day: moment(dateString, 'YYYY-MM-DD').date(),
+                    month: moment(monthValue.dateString).month() + 1,
+                    year: moment(monthValue.dateString).year(),
+                    dateString: moment(dateString).format('YYYY-MM-DD'),
 
-        //         }
-        //     })
-        // })
-        // }
+                }
+            }, () => {
+                // get ceremoney of curr date
+                this.getCeremoney(monthValue.year, monthValue.month, this.state.selectedDate.day);
+            })
+
+
+        })
+
 
     }
 
@@ -538,6 +550,7 @@ class CalendarScreen extends Component {
      */
     changeWeek = (date) => {
         if (moment(date).week() !== moment(this.state.selectedDate.dateString).week()) {
+
             this.getCeremoney(moment(date).year(), moment(date).month() + 1, moment(date).date());
             this.setState({
                 monthSelect: moment(date).month() + 1, yearSelect: moment(date).year(),
@@ -549,6 +562,7 @@ class CalendarScreen extends Component {
                 },
                 markedDates: { [moment(date).format('YYYY-MM-DD')]: { selected: true } },
             })
+
         }
 
     }
@@ -584,15 +598,6 @@ class CalendarScreen extends Component {
             }, () => {
                 // get ceremoney of curr date
                 this.getCeremoney(monthValue.year, monthValue.month, this.state.selectedDate.day);
-                this.setState({
-                    selectedDateWeek: {
-                        day: moment(dateString, 'YYYY-MM-DD').date(),
-                        month: moment(monthValue.dateString).month() + 1,
-                        year: moment(monthValue.dateString).year(),
-                        dateString: moment(dateString).format('YYYY-MM-DD'),
-
-                    }
-                })
             })
         }
 
@@ -601,23 +606,40 @@ class CalendarScreen extends Component {
     }
     onMonthChange = (month, updateSource) => {
         console.log('ExpandableCalendarScreen onMonthChange: ', month, updateSource);
+
     };
 
     onDateChanged = (date, updateSource) => {
-        if (moment(date).week() !== moment(this.state.selectedDate.dateString).week()) {
-            this.getCeremoney(moment(date).year(), moment(date).month() + 1, moment(date).date());
-            this.setState({
-                monthSelect: moment(date).month() + 1, yearSelect: moment(date).year(),
-                selectedDate: {
-                    day: moment(date).date(),
-                    month: moment(date).month() + 1,
-                    year: moment(date).year(),
-                    dateString: moment(date).format('YYYY-MM-DD'),
-                },
-                markedDates: { [moment(date).format('YYYY-MM-DD')]: { selected: true } },
-            })
+        if (date) {
+            if (moment(date).week() !== moment(this.state.selectedDate.dateString).week()) {
+                this.getCeremoney(moment(date).year(), moment(date).month() + 1, moment(date).date());
+                this.setState({
+                    monthSelect: moment(date).month() + 1, yearSelect: moment(date).year(),
+                    selectedDateWeek: {
+                        day: moment(date).date(),
+                        month: moment(date).month() + 1,
+                        year: moment(date).year(),
+                        dateString: moment(date).format('YYYY-MM-DD'),
+                    },
+                    markedDates: { [moment(date).format('YYYY-MM-DD')]: { selected: true } },
+                }, () => {
+                    this.setState({
+                        selectedDate: {
+                            day: moment(date).date(),
+                            month: moment(date).month() + 1,
+                            year: moment(date).year(),
+                            dateString: moment(date).format('YYYY-MM-DD'),
+                        }
+                    })
+                })
+                if (this.calendarList) {
+                    this.calendarList.scrollToDay(moment(date).format('YYYY-MM-DD'), 0, false)
+                }
+            }
+            // fetch and set data for date + week ahead
+
         }
-        // fetch and set data for date + week ahead
+
     };
 
     render() {
@@ -650,11 +672,9 @@ class CalendarScreen extends Component {
 
         })
 
-
         return (
-            <View style={styles.container}>
-                <SafeAreaView style={{ flex: 1 }}>
-
+            <SafeAreaView style={styles.container}>
+                <View style={{ flex: 1, position: 'relative' }}>
                     <Header
                         formatMessage={formatMessage}
                         goBack={this.goBack}
@@ -702,10 +722,15 @@ class CalendarScreen extends Component {
                         }}>
                             {/* {this.state.showCalendar && */}
                             <CalendarProvider
-                                date={this.state.selectedDateWeek.dateString}
+                                date={this.state.selectedDate.dateString}
                                 onDateChanged={this.onDateChanged}
-                                onMonthChange={this.onMonthChange}
 
+                                markedDates={{
+                                    ...this.state.markedDates,
+                                    [this.state.selectedDate.dateString]: {
+                                        selected: true,
+                                    },
+                                }}
                             >
                                 <WeekCalendar
                                     testID={testIDs.weekCalendar.CONTAINER}
@@ -716,8 +741,8 @@ class CalendarScreen extends Component {
                                     calendarWidth={screenWidth}
                                     allowShadow={false}
                                     markedDates={{
-                                        ...this.state.markedDatesWeek,
-                                        [this.state.selectedDateWeek.dateString]: {
+                                        ...this.state.markedDates,
+                                        [this.state.selectedDate.dateString]: {
                                             selected: true,
                                         },
                                     }}
@@ -726,7 +751,7 @@ class CalendarScreen extends Component {
                                     style={[styles.calendar, { paddingBottom: 20, paddingLeft: 0, paddingRight: 0 }]}
                                     // current={this.state.selectedDateWeek.dateString}
                                     onDayPress={(date) => this.changeDate(date.dateString)}
-                                    changeWeek={this.changeWeek}
+                                // changeWeek={this.changeWeek}
                                 />
 
                             </CalendarProvider>
@@ -750,16 +775,18 @@ class CalendarScreen extends Component {
                         showsVerticalScrollIndicator={false}>
                         <Animated.View style={{ opacity: this.state.opacityCalendar }}>
                             <CalendarList
+                                ref={ref => this.calendarList = ref}
                                 renderHeader={() => {
                                     return (null)
                                 }}
                                 onVisibleMonthsChange={months => {
                                     this.getMonth(months);
                                 }}
-                                key={this.state.key}
-                                onLayout={() => {
-                                    this.setState({ key: 'ready' });
-                                }}
+                                // key={this.state.key}
+                                // onLayout={() => {
+                                //     this.setState({ key: 'ready' });
+                                // }}
+
                                 calendarWidth={screenWidth}
                                 hideDayNames={true}
                                 style={[styles.calendar, { padding: 0, flex: 1 }]}
@@ -770,17 +797,19 @@ class CalendarScreen extends Component {
                                 renderArrow={direction => (
                                     <Arrow direction={direction} />
                                 )}
-                                onVisibleMonthsChange={this.onVisibleMonthsChange}
+                                // onVisibleMonthsChange={this.onVisibleMonthsChange}
                                 calendarHeight={'auto'}
                                 pastScrollRange={(new Date().getFullYear() - 1900) * 12}
                                 futureScrollRange={(2099 - new Date().getFullYear()) * 12}
-                                current={this.state.selectedDate.dateString}
+                                currentDate={this.state.selectedDate.dateString}
                                 dayComponent={this.renderDate}
                                 pagingEnabled={true}
                                 theme={calendarThemes}
+                                // current = {this.state.selectedDate.dateString}
                                 monthChange={this.monthChange}
                                 onDayPress={this.onSelectedDate}
                                 markingType={'custom'}
+                                removeClippedSubviews={false}
                                 markedDates={{
                                     ...this.state.markedDates,
                                     [this.state.selectedDate.dateString]: {
@@ -790,7 +819,11 @@ class CalendarScreen extends Component {
                             />
                         </Animated.View>
                         <View style={styles.borderBottom} />
-                        <TuviScreen formatMessage={formatMessage} date={this.state.selectedDate} isHoangdao={isHoangdao} ceremoney={this.state.listCeremoney} />
+                        <TuviScreen
+                            formatMessage={formatMessage}
+                            date={this.state.selectedDateWeek}
+                            isHoangdao={isHoangdao}
+                            ceremoney={this.state.listCeremoney} />
                         <ConvertModal
                             backToWelcome={this.backToWelcome}
                             isVisible={this.state.isVisible}
@@ -800,8 +833,8 @@ class CalendarScreen extends Component {
                             formatMessage={formatMessage}
                         />
                     </Animated.ScrollView>
-                </SafeAreaView>
-            </View >
+                </View>
+            </SafeAreaView>
         );
     }
 }

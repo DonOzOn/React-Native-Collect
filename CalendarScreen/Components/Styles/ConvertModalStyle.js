@@ -50,7 +50,8 @@ export const styles = StyleSheet.create({
     modalContainer: {
         height: height / 2.5,
         width: '100%', backgroundColor:
-            'white', borderTopLeftRadius: 20, borderTopRightRadius: 20
+            'white', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+            // position: 'absolute', bottom: 0
     },
     modalHeaderLeft: { flex: 1, justifyContent: 'flex-start', flexDirection: 'row', paddingLeft:width/16.4},
     buttonChoose:{

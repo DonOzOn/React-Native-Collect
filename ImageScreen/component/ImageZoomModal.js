@@ -7,20 +7,21 @@ import {
   PermissionsAndroid,
   Platform,
   SafeAreaView,
+  ScrollView,
   ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {PureComponent} from 'react';
-import Toast , {DURATION} from 'react-native-easy-toast';
+import React, { PureComponent } from 'react';
+import Toast, { DURATION } from 'react-native-easy-toast';
 
 import CameraRoll from '@react-native-community/cameraroll';
-import {FlatList} from 'react-native-gesture-handler';
+import { FlatList } from 'react-native-gesture-handler';
 import HeaderImageScreen from './HeaderImageScreen';
-import {ImageCacheManager} from './react-native-cached-image/index';
+import { ImageCacheManager } from './react-native-cached-image/index';
 import ImageItem from './ImageItem';
 import ImgToBase64 from 'react-native-image-base64';
-import {LightText} from '../../../../base/components/Text';
+import { LightText } from '../../../../base/components/Text';
 import Modal from 'react-native-modal';
 import RNFS from 'react-native-fs';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -31,10 +32,10 @@ import {
   getListObjectGuid,
 } from '../../../../core/storage';
 import message from '../../../../core/msg/gallery';
-import {styles} from './styles/ImageZoomStyle';
+import { styles } from './styles/ImageZoomStyle';
 
 const defaultImageCacheManager = ImageCacheManager();
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 class ImageZoomModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -53,7 +54,7 @@ class ImageZoomModal extends PureComponent {
   }
   componentDidMount() {
     InteractionManager.runAfterInteractions(() => {
-      this.setState({interactionsComplete: true});
+      this.setState({ interactionsComplete: true });
     });
     //check internet
     this.CheckConnectivity();
@@ -64,12 +65,12 @@ class ImageZoomModal extends PureComponent {
   };
 
   goBack = () => {
-    this.setState({calcImgHeight: 0});
+    this.setState({ calcImgHeight: 0 });
     this.props.onDismiss();
   };
 
   goToGallery = () => {
-    this.setState({calcImgHeight: 0});
+    this.setState({ calcImgHeight: 0 });
     this.props.goToGallery();
   };
 
@@ -97,8 +98,8 @@ class ImageZoomModal extends PureComponent {
    * share image
    */
   share = () => {
-    const {formatMessage} = this.props;
-    const {Language} = configuration;
+    const { formatMessage } = this.props;
+    const { Language } = configuration;
     const options = {
       subject: formatMessage(message.sharePhoto),
       url: '',
@@ -121,15 +122,15 @@ class ImageZoomModal extends PureComponent {
           .catch(err => {
             console.log('err', err);
           });
-      }else{
-        RNFS.readFile(RNFS.MainBundlePath+'/images/' + this.props.images[this.props.currIndex].uriBKName,'base64').then(base64String=> {
+      } else {
+        RNFS.readFile(RNFS.MainBundlePath + '/images/' + this.props.images[this.props.currIndex].uriBKName, 'base64').then(base64String => {
           options.url = `data:image/png;base64,${base64String}`;
           this.shareImage(options);
         }).catch(errIos => console.log('errIos', errIos))
       }
     } else {
       this.toast.show(formatMessage(message.waiting), DURATION.FOREVER);
-      this.setState({loadingShare: true});
+      this.setState({ loadingShare: true });
       defaultImageCacheManager
         .downloadAndCacheUrl(
           this.props.images[this.props.currIndex].UrlImageFull,
@@ -140,7 +141,7 @@ class ImageZoomModal extends PureComponent {
             this.toast.close();
             options.url = `file://${response}`;
             this.shareImage(options);
-            this.setState({loadingShare: false});
+            this.setState({ loadingShare: false });
           } else {
             this.shareFromServer(options);
           }
@@ -154,7 +155,7 @@ class ImageZoomModal extends PureComponent {
   };
 
   shareFromServer = options => {
-    const {formatMessage} = this.props;
+    const { formatMessage } = this.props;
     ImgToBase64.getBase64String(
       encodeURI(this.props.images[this.props.currIndex].UrlImageFull),
     )
@@ -164,7 +165,7 @@ class ImageZoomModal extends PureComponent {
           this.shareImage(options);
         } else {
           this.toast.close();
-          this.setState({loadingShare: false});
+          this.setState({ loadingShare: false });
           if (Platform.OS === 'android') {
             ToastAndroid.show(
               formatMessage(message.checkInternet) + '!',
@@ -184,7 +185,7 @@ class ImageZoomModal extends PureComponent {
         } else {
           Alert.alert(formatMessage(message.checkInternet) + '!');
         }
-        this.setState({loadingShare: false});
+        this.setState({ loadingShare: false });
         this.toast.close();
       });
   };
@@ -196,18 +197,18 @@ class ImageZoomModal extends PureComponent {
   shareImage = options => {
     Share.open(options)
       .then(() => {
-        this.setState({loadingShare: false});
+        this.setState({ loadingShare: false });
         this.toast.close();
       })
       .catch(err => {
-        this.setState({loadingShare: false});
+        this.setState({ loadingShare: false });
         err && console.log(err);
         this.toast.close();
       });
   };
 
   setBG = () => {
-    const {formatMessage} = this.props;
+    const { formatMessage } = this.props;
     this.toast.show(formatMessage(message.waiting), DURATION.FOREVER);
     this.props.setBG();
   };
@@ -216,14 +217,13 @@ class ImageZoomModal extends PureComponent {
    * download image
    */
   onDownloadImagePress = () => {
-    const {formatMessage} = this.props;
+    const { formatMessage } = this.props;
     // check internet connect
     // if (this.state.online) {
-    const imagePath = `${
-      Platform.OS === 'android'
-        ? `${RNFS.DownloadDirectoryPath}`
-        : `${RNFS.TemporaryDirectoryPath}`
-    }/${(Math.random() * 1000) | 0}.png`;
+    const imagePath = `${Platform.OS === 'android'
+      ? `${RNFS.DownloadDirectoryPath}`
+      : `${RNFS.TemporaryDirectoryPath}`
+      }/${(Math.random() * 1000) | 0}.png`;
     //android download
     if (Platform.OS === 'android') {
       PermissionsAndroid.requestMultiple([
@@ -235,7 +235,7 @@ class ImageZoomModal extends PureComponent {
               if (this.props.images[this.props.currIndex].uriBK) {
                 this.downloadAndroidOffline(imagePath);
               } else {
-                this.setState({loadingDownload: true});
+                this.setState({ loadingDownload: true });
                 this.downloadImageAndroid(imagePath);
               }
             } else {
@@ -252,8 +252,8 @@ class ImageZoomModal extends PureComponent {
         if (this.props.images[this.props.currIndex].uriBKName) {
           CameraRoll.saveToCameraRoll(
             RNFS.MainBundlePath +
-              '/images/' +
-              this.props.images[this.props.currIndex].uriBKName,
+            '/images/' +
+            this.props.images[this.props.currIndex].uriBKName,
             'photo',
           )
             .then(() => {
@@ -266,7 +266,7 @@ class ImageZoomModal extends PureComponent {
               this.toast.show(formatMessage(message.saveFailed), 700),
             );
         } else {
-          this.setState({loadingDownload: true});
+          this.setState({ loadingDownload: true });
           this.downloadImageIOS(imagePath);
         }
       }
@@ -274,7 +274,7 @@ class ImageZoomModal extends PureComponent {
   };
 
   downloadAndroidOffline = imagePath => {
-    const {formatMessage} = this.props;
+    const { formatMessage } = this.props;
     if (this.props.images[this.props.currIndex].uriBK) {
       let imageBK = this.props.images[this.props.currIndex].uriBKName.split(
         '.',
@@ -303,7 +303,7 @@ class ImageZoomModal extends PureComponent {
    * @param {*} params
    */
   downloadImageAndroid = () => {
-    const {formatMessage} = this.props;
+    const { formatMessage } = this.props;
     let imageBK = this.props.images[this.props.currIndex].UrlImageFull.split(
       '.',
     );
@@ -325,10 +325,10 @@ class ImageZoomModal extends PureComponent {
                 this.toastSave.show(formatMessage(message.saved), 700);
               }, 700);
 
-              this.setState({loadingDownload: false});
+              this.setState({ loadingDownload: false });
             })
             .catch(() => {
-              this.setState({loadingDownload: false});
+              this.setState({ loadingDownload: false });
               this.toast.show(formatMessage(message.saveFailed), 700);
               this.downloadImage();
             });
@@ -337,15 +337,15 @@ class ImageZoomModal extends PureComponent {
         }
       })
       .catch(() => {
-        this.setState({loadingShare: false});
+        this.setState({ loadingShare: false });
         this.downloadImage();
         this.toast.close();
       });
   };
 
   downloadImage = () => {
-    const {formatMessage} = this.props;
-    const {Language} = configuration;
+    const { formatMessage } = this.props;
+    const { Language } = configuration;
     RNFetchBlob.config({
       addAndroidDownloads: {
         useDownloadManager: true, // <-- this is the only thing required
@@ -364,14 +364,14 @@ class ImageZoomModal extends PureComponent {
         encodeURI(this.props.images[this.props.currIndex].UrlImageFull),
       )
       .then(() => {
-        this.setState({loadingDownload: false});
+        this.setState({ loadingDownload: false });
         this.toast.close();
         setTimeout(() => {
           this.toastSave.show(formatMessage(message.saved), 700);
         }, 700);
       })
       .catch(() => {
-        this.setState({loadingDownload: false});
+        this.setState({ loadingDownload: false });
         ToastAndroid.show(
           formatMessage(message.unableLoadPhoto),
           ToastAndroid.SHORT,
@@ -384,7 +384,7 @@ class ImageZoomModal extends PureComponent {
    * @param {*} imagePath
    */
   downloadImageIOS = imagePath => {
-    const {formatMessage} = this.props;
+    const { formatMessage } = this.props;
     this.toast.show(formatMessage(message.loading) + '...');
     defaultImageCacheManager
       .downloadAndCacheUrl(
@@ -395,7 +395,7 @@ class ImageZoomModal extends PureComponent {
         if (response) {
           CameraRoll.saveToCameraRoll(`${response}`, 'photo')
             .then(() => {
-              this.setState({loadingDownload: false});
+              this.setState({ loadingDownload: false });
               this.toast.close();
               setTimeout(() => {
                 this.toastSave.show(formatMessage(message.saved), 700);
@@ -405,7 +405,7 @@ class ImageZoomModal extends PureComponent {
               setTimeout(() => {
                 this.toast.show(formatMessage(message.saveFailed), 700);
               }, 700);
-              this.setState({loadingDownload: false});
+              this.setState({ loadingDownload: false });
             });
         } else {
           this.downloadIos(imagePath);
@@ -413,13 +413,13 @@ class ImageZoomModal extends PureComponent {
       })
       .catch(() => {
         this.downloadIos(imagePath);
-        this.setState({loadingShare: false});
+        this.setState({ loadingShare: false });
         this.toast.close();
       });
   };
 
   downloadIos = imagePath => {
-    const {formatMessage} = this.props;
+    const { formatMessage } = this.props;
     RNFS.downloadFile({
       fromUrl: encodeURI(this.props.images[this.props.currIndex].UrlImageFull),
       toFile: imagePath,
@@ -427,7 +427,7 @@ class ImageZoomModal extends PureComponent {
       .promise.then(() => {
         CameraRoll.saveToCameraRoll(imagePath, 'photo')
           .then(() => {
-            this.setState({loadingDownload: false});
+            this.setState({ loadingDownload: false });
             this.toast.close();
             setTimeout(() => {
               this.toastSave.show(formatMessage(message.saved), 700);
@@ -437,12 +437,12 @@ class ImageZoomModal extends PureComponent {
             setTimeout(() => {
               this.toast.show(formatMessage(message.saveFailed), 700);
             }, 700);
-            this.setState({loadingDownload: false});
+            this.setState({ loadingDownload: false });
           });
       })
       .catch(() => {
         Alert.alert(formatMessage(message.errorSavePhoto) + '!');
-        this.setState({loadingDownload: false});
+        this.setState({ loadingDownload: false });
         this.toast.close();
       });
   };
@@ -451,7 +451,7 @@ class ImageZoomModal extends PureComponent {
    * render image of custom slide
    * @param {*} param0
    */
-  renderItem = ({item, index}) => {
+  renderItem = ({ item, index }) => {
     let calHeight;
     if (this.state.calcImgHeight) {
       calHeight = this.state.calcImgHeight;
@@ -459,7 +459,7 @@ class ImageZoomModal extends PureComponent {
       calHeight = this.props.calcImgHeight;
     }
     return (
-      <ImageItem
+       <ImageItem
         item={item}
         currIndex={this.props.currIndex}
         images={this.props.images}
@@ -467,7 +467,6 @@ class ImageZoomModal extends PureComponent {
         formatMessage={this.props.formatMessage}
         index={index}
         onLoadEvent={this.onLoadEvent}
-        ref={ref => (this.imageItem = ref)}
       />
     );
   };
@@ -576,7 +575,7 @@ class ImageZoomModal extends PureComponent {
   });
 
   render() {
-    const {visibleModalImage, images, formatMessage} = this.props;
+    const { visibleModalImage, images, formatMessage } = this.props;
     // images.map(e => {
     //   newImages.push({ url: e.UrlImageFull, props: e });
     // });
@@ -589,11 +588,11 @@ class ImageZoomModal extends PureComponent {
         isVisible={visibleModalImage}
         transparent={true}
         backdropOpacity={0.5}
-        style={{backgroundColor: 'white'}}
+        style={{ backgroundColor: 'white' }}
         useNativeDriver={true}
         animationInTiming={300}
         animationOutTiming={200}
-        style={{marginLeft: 0}}
+        style={{ marginLeft: 0 }}
         onRequestClose={() => {
           this.onDismiss();
         }}>
@@ -635,10 +634,10 @@ class ImageZoomModal extends PureComponent {
               removeClippedSubviews={true}
             />
           </View>
-          <View style={{width: width, height: 49, justifyContent: 'center'}}>
+          <View style={{ width: width, height: 49, justifyContent: 'center' }}>
             <View style={styles.bottom}>
               <TouchableOpacity
-                hitSlop={{left: 20, right: 20, top: 20, bottom: 20}}
+                hitSlop={{ left: 20, right: 20, top: 20, bottom: 20 }}
                 disabled={this.state.loadingShare}
                 onPress={this.share}
                 style={styles.transformShare}>
@@ -650,14 +649,14 @@ class ImageZoomModal extends PureComponent {
                   />
 
                   <LightText
-                    style={[styles.textBottom, {transform: [{translateX: 2}]}]}>
+                    style={[styles.textBottom, { transform: [{ translateX: 2 }] }]}>
                     {formatMessage(message.share)}
                   </LightText>
                 </View>
               </TouchableOpacity>
               {Platform.OS === 'android' && (
                 <TouchableOpacity
-                  hitSlop={{left: 20, right: 20, top: 20, bottom: 20}}
+                  hitSlop={{ left: 20, right: 20, top: 20, bottom: 20 }}
                   onPress={this.setBG}>
                   <View style={styles.bottomItem}>
                     <Image
@@ -673,7 +672,7 @@ class ImageZoomModal extends PureComponent {
               )}
 
               <TouchableOpacity
-                hitSlop={{left: 20, right: 20, top: 20, bottom: 20}}
+                hitSlop={{ left: 20, right: 20, top: 20, bottom: 20 }}
                 disabled={this.state.loadingDownload}
                 onPress={this.onDownloadImagePress}>
                 <View style={styles.bottomItem}>
@@ -683,7 +682,7 @@ class ImageZoomModal extends PureComponent {
                     resizeMode="contain"
                   />
                   <LightText
-                    style={[styles.textBottom, {transform: [{translateX: 2}]}]}>
+                    style={[styles.textBottom, { transform: [{ translateX: 2 }] }]}>
                     {formatMessage(message.save)}
                   </LightText>
                 </View>

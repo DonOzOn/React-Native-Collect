@@ -7,7 +7,7 @@ import {
     Platform,
     View
 } from 'react-native';
-import React, { PureComponent } from 'react'
+import React, { PureComponent, useRef } from 'react'
 
 import { CachedImage } from './react-native-cached-image/index';
 import FastImage from 'react-native-fast-image';
@@ -15,6 +15,7 @@ import ImageZoom from 'react-native-image-pan-zoom';
 import { Images } from '../../CalendarScreen/Themes/index';
 import { LightText } from '../../../../base/components/Text';
 import OpenSansSemiBoldText from '../../../../base/components/Text/OpenSansSemiBoldText';
+import ReactNativeZoomableView from '@dudigital/react-native-zoomable-view/src/ReactNativeZoomableView';
 import _ from 'lodash';
 import configuration from '../../../../configuration';
 import { createImageProgress } from 'react-native-image-progress';
@@ -23,9 +24,15 @@ import { styles } from './styles/ImageZoomStyle';
 
 const { height, width } = Dimensions.get('window');
 const ImageFastContain = createImageProgress(CachedImage);
-export default class ImageItem extends PureComponent {
-    renderIndicator = () => {
-        const { formatMessage } = this.props;
+const ImageFast = createImageProgress(FastImage);
+export default function ImageItem(props) {
+
+    const scaleValue = useRef(1);
+    const { calHeight, item } = props;
+    const { Language } = configuration;
+
+    const renderIndicator = () => {
+        const { formatMessage } = props;
         return (
             <View
                 style={{
@@ -45,7 +52,7 @@ export default class ImageItem extends PureComponent {
     };
 
     //on load image
-    onLoadImage = async () => {
+    const onLoadImage = async () => {
 
         //download to cache folder when load image
         if (Platform.OS === 'android') {
@@ -63,9 +70,7 @@ export default class ImageItem extends PureComponent {
         }
 
     };
-
-    
-    renderError = () => {
+    const renderError = () => {
         return (
             <Image
                 source={Images.loadFailImage}
@@ -75,53 +80,86 @@ export default class ImageItem extends PureComponent {
         );
     };
 
-    onLoadEvent = (evt) => {
-        this.props.onLoadEvent(evt)
+    const onLoadEvent = (evt) => {
+        props.onLoadEvent(evt)
     }
 
-    render() {
-        const { calHeight, item } = this.props;
-        const { Language } = configuration;
-        return (<Animated.View style={[{ width: width, height: '100%' }]}>
+
+    const onMove = ({ scale }) => {
+        scaleValue.current = scale;
+        // onMove && onMove({ scale });
+    }
+
+    return (
+        <View style={[{ width: width, height: '100%' }]}>
             <ImageZoom
-                style={{ flex: 1, justifyContent: 'center', position: 'relative' }}
                 cropWidth={Dimensions.get('window').width}
                 cropHeight={Dimensions.get('window').height}
-                imageWidth={width}
+                imageWidth={Dimensions.get('window').width}
                 imageHeight={'100%'}
-                useNativeDriver={true}>
-                    <ImageFastContain
-                        key={item.UrlImageFull}
-                        ref={ref => (this.imageFast = ref)}
-                        onLoad={this.onLoadEvent}
-                        onLoadStart={this.onLoadImage}
-                        renderError={this.renderError}
-                        resizeMode={'contain'}
-                        renderIndicator={this.renderIndicator}
-                        renderError={this.renderError}
-                        source={
-                            item.uriBK
-                                ? item.uriBK
-                                : {
+                minScale={1}
+                style={{ flex: 1, justifyContent: 'center', position: 'relative' }}
+                onStartShouldSetPanResponder={(e) => {
+                    return e.nativeEvent.touches.length === 2 || scaleValue.current > 1;
+                }}
+                onMove={onMove}>
+                <View
+                    style={{ width: '100%', height: '100%' }}
+                    onStartShouldSetResponder={(e) => {
+                        console.log(
+                            scaleValue.current,
+                            e.nativeEvent.touches.length < 2 && scaleValue.current <= 1,
+                        );
+                        return e.nativeEvent.touches.length < 2 && scaleValue.current <= 1;
+                    }}>
+                    {item.uriBK
+                        ? <ImageFast
+                            key={item.UrlImageFull}
+                            onLoad={onLoadEvent}
+                            onLoadStart={onLoadImage}
+                            renderError={renderError}
+                            resizeMode={'contain'}
+                            resizeMethod={'resize'}
+                            renderIndicator={renderIndicator}
+                            renderError={renderError}
+                            source={item.uriBK}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                position: 'relative',
+                            }} />
+                        : <ImageFastContain
+                            key={item.UrlImageFull}
+                            onLoad={onLoadEvent}
+                            onLoadStart={onLoadImage}
+                            renderError={renderError}
+                            resizeMode={'contain'}
+                            resizeMethod={'resize'}
+                            renderIndicator={renderIndicator}
+                            renderError={renderError}
+                            source={
+                                {
                                     uri: item.UrlImageFull,
                                     priority: FastImage.priority.high,
                                 }
-                        }
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            position: 'relative',
-                        }}
-                    />
-                <LightText
-                    style={[
-                        styles.titleImg,
-                        { bottom: calHeight > 1.5 ? 15 : height / 3.3 },
-                    ]}
-                    onLayout={this.onLayout}>
-                    {Language === 'vi' ? item.DescriptionVi : item.DescriptionEn}
-                </LightText>
+                            }
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                position: 'relative',
+                            }}
+                        />}
+                    <LightText
+                        style={[
+                            styles.titleImg,
+                            { bottom: calHeight > 1.5 ? 15 : height / 3.3 },
+                        ]}
+                    >
+                        {Language === 'vi' ? item.DescriptionVi : item.DescriptionEn}
+                    </LightText>
+                </View>
             </ImageZoom>
-        </Animated.View>)
-    }
+        </View>
+
+    )
 }

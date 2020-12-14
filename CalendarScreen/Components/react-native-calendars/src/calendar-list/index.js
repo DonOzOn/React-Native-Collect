@@ -1,4 +1,4 @@
-import { ActivityIndicator, Dimensions, FlatList, Platform, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, InteractionManager, Platform, View } from 'react-native';
 import React, { Component } from 'react';
 import { parseDate, xdateToData } from '../interface';
 
@@ -103,7 +103,7 @@ class CalendarList extends Component {
       currentMonth: parseDate(props.current)
     };
 
-    this.onViewableItemsChangedBound = this.onViewableItemsChanged.bind(this);
+    this.onViewableItemsChangedBound = _.debounce(this.onViewableItemsChanged.bind(this), 0);
     this.renderCalendarBound = this.renderCalendar.bind(this);
     this.getItemLayout = this.getItemLayout.bind(this);
     this.onLayout = this.onLayout.bind(this);
@@ -137,6 +137,7 @@ class CalendarList extends Component {
 
   scrollToMonth(m) {
     const month = parseDate(m);
+    console.log('month', month)
     const scrollTo = month || this.state.openDate;
     let diffMonths = Math.round(this.state.openDate.clone().setDate(1).diffMonths(scrollTo.clone().setDate(1)));
     const size = this.props.horizontal ? this.props.calendarWidth : this.props.calendarHeight;
@@ -145,28 +146,53 @@ class CalendarList extends Component {
     this.listView.scrollToOffset({ offset: scrollAmount, animated: true });
   }
 
-  UNSAFE_componentWillReceiveProps(props) {
+  componentDidUpdate(prevProps) {
+    const prevCurrent = parseDate(prevProps.current);
     const current = parseDate(this.props.current);
-    const nextCurrent = parseDate(props.current);
-    if (nextCurrent && current && nextCurrent.getTime() !== current.getTime()) {
-      this.scrollToMonth(nextCurrent);
+    if (current && prevCurrent && current.getTime() !== prevCurrent.getTime()) {
+      this.scrollToMonth(current);
     }
 
-    const rowclone = this.state.rows;
+  }
+  static getDerivedStateFromProps(nextProps, prevState) {
+    const rowclone = prevState.rows;
     const newrows = [];
 
+
     for (let i = 0; i < rowclone.length; i++) {
-      let val = this.state.texts[i];
+      let val = prevState.texts[i];
       if (rowclone[i].getTime) {
         val = rowclone[i].clone();
         val.propbump = rowclone[i].propbump ? rowclone[i].propbump + 1 : 1;
       }
       newrows.push(val);
     }
-    this.setState({
-      rows: newrows
-    });
+    return { rows: newrows };
   }
+
+
+  // UNSAFE_componentWillReceiveProps(props) {
+  //   const current = parseDate(this.props.current);
+  //   const nextCurrent = parseDate(props.current);
+  //   if (nextCurrent && current && nextCurrent.getTime() !== current.getTime()) {
+  //     this.scrollToMonth(nextCurrent);
+  //   }
+
+  //   const rowclone = this.state.rows;
+  //   const newrows = [];
+
+  //   for (let i = 0; i < rowclone.length; i++) {
+  //     let val = this.state.texts[i];
+  //     if (rowclone[i].getTime) {
+  //       val = rowclone[i].clone();
+  //       val.propbump = rowclone[i].propbump ? rowclone[i].propbump + 1 : 1;
+  //     }
+  //     newrows.push(val);
+  //   }
+  //   this.setState({
+  //     rows: newrows
+  //   });
+  // }
 
   onViewableItemsChanged({ viewableItems }) {
     function rowIsCloseToViewable(index, distance) {
@@ -203,12 +229,9 @@ class CalendarList extends Component {
       currentMonth: parseDate(visibleMonths[0])
     }, () => {
       if (this.props.onVisibleMonthsChange) {
-        clearTimeout(this.scrollTimeout);
-        this.scrollTimeout = setTimeout(() => {
-          this.props.onVisibleMonthsChange(visibleMonths[0]);
-        }, 0);
+        this.props.onVisibleMonthsChange(visibleMonths[0]);
       }
-    });  
+    });
 
   }
 
@@ -218,6 +241,7 @@ class CalendarList extends Component {
         testID={`${this.props.testID}_${item}`}
         scrollToMonth={this.scrollToMonth.bind(this)}
         item={item}
+        currentDate={this.props.currentDate}
         currentMonth={this.props.current}
         calendarHeight={this.props.calendarHeight}
         calendarWidth={this.props.horizontal ? this.props.calendarWidth : undefined}
@@ -322,7 +346,6 @@ class CalendarList extends Component {
           testID={this.props.testID}
           onLayout={this.onLayout}
           ref={(c) => this.listView = c}
-          scrollEventThrottle={100}
           style={[this.style.container, this.props.style]}
           initialListSize={this.props.pastScrollRange + this.props.futureScrollRange + 1} // ListView deprecated
           data={this.state.rows}

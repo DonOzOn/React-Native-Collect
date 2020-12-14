@@ -34,6 +34,7 @@ import moment from 'moment'
 import { styles } from './style/GalleryStyle'
 
 const defaultImageCacheManager = ImageCacheManager();
+const ImageFastCache = createImageProgress(CachedImage);
 const ImageFast = createImageProgress(CachedImage);
 const { width, height } = Dimensions.get('window');
 export class GalleryScreen extends Component {
@@ -348,16 +349,24 @@ export class GalleryScreen extends Component {
                                     onPress={() => {
                                         this.goToDetail(item, index);
                                     }}>
-                                    <ImageFast
-                                        renderIndicator={this.renderIndicator}
-                                        renderError={this.renderError}
-                                        resizeMode={"cover"}
-                                        style={styles.image}
-                                        source={item.uriBK
-                                            ? item.uriBK : {
-                                                uri: item.UrlImageThumbnail,
-                                            }}
-                                    />
+                                    {
+                                        item.uriBK ?
+                                            <ImageFast
+                                                renderIndicator={this.renderIndicator}
+                                                renderError={this.renderError}
+                                                resizeMode={"cover"}
+                                                style={styles.image}
+                                                source={item.uriBK}
+                                            /> :
+                                            <ImageFastCache
+                                                renderIndicator={this.renderIndicator}
+                                                renderError={this.renderError}
+                                                resizeMode={"cover"}
+                                                style={styles.image}
+                                                source={{ uri: item.UrlImageThumbnail, }}
+                                            />
+                                    }
+
 
                                 </TouchableOpacity>
                             </View>
