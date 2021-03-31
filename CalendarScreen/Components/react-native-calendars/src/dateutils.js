@@ -72,9 +72,12 @@ function page(xd, firstDayOfWeek, showSixWeeks) {
   }
 
   const daysForSixWeeks = (((daysBefore + days.length) / 6) >= 6);
-
   if (showSixWeeks && !daysForSixWeeks) {
     to.addDays(7);
+  }
+
+  if(showSixWeeks){
+    to.addDays(7)
   }
 
   if (isLTE(from, days[0])) {

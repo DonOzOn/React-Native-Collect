@@ -1,20 +1,18 @@
 import React, {Component} from 'react';
-import {View} from 'react-native';
-import PropTypes from 'prop-types';
-import XDate from 'xdate';
+import {parseDate, xdateToData} from '../interface';
 
-import dateutils from '../dateutils';
-import {xdateToData, parseDate} from '../interface';
-import {SELECT_DATE_SLOT} from '../testIDs';
-import styleConstructor from './style';
-
+import Calendar from '../calendar';
 import Day from '../calendar/day/basic';
-import UnitDay from '../calendar/day/period';
 import MultiDotDay from '../calendar/day/multi-dot';
 import MultiPeriodDay from '../calendar/day/multi-period';
+import PropTypes from 'prop-types';
+import {SELECT_DATE_SLOT} from '../testIDs';
 import SingleDay from '../calendar/day/custom';
-import Calendar from '../calendar';
-
+import UnitDay from '../calendar/day/period';
+import {View} from 'react-native';
+import XDate from 'xdate';
+import dateutils from '../dateutils';
+import styleConstructor from './style';
 
 const EmptyArray = [];
 

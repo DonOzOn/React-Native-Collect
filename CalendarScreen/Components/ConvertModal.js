@@ -23,8 +23,30 @@ export class ConvertModal extends Component {
         }
     }
 
+    componentDidMount() {
+        if(this.props.defaultType){
+            this.setState({ activeSwitch: this.props.defaultType })
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.defaultType !== prevProps.defaultType) {
+            this.setState({ activeSwitch: this.props.defaultType })
+        }
+    }
+
+
     back = () => {
-        this.props.modalHandle();
+        if (!this.props.defaultType) {
+            this.setState({ activeSwitch: 1 }, () => {
+                this.props.modalHandle();
+            });
+        } else {
+            this.props.modalHandle();
+
+        }
+
+
     }
 
     selectDate = (date) => {
@@ -39,7 +61,16 @@ export class ConvertModal extends Component {
     }
 
     backToWelcome = () => {
-        this.props.backToWelcome();
+        if (!this.props.defaultType) {
+            this.setState({ activeSwitch: 1 }, () => {
+                this.props.backToWelcome();
+            });
+        } else {
+            this.props.backToWelcome();
+            this.convert.select()
+        }
+
+
     }
 
     render() {
@@ -48,7 +79,7 @@ export class ConvertModal extends Component {
             <Modal
                 isVisible={isVisible}
                 useNativeDriver={true}
-                onBackdropPress={  this.backToWelcome}
+                onBackdropPress={() => this.backToWelcome()}
                 onRequestClose={() => {
                     this.backToWelcome()
                 }}
@@ -56,8 +87,9 @@ export class ConvertModal extends Component {
                 transparent={true}
                 backdropOpacity={0.5}
                 animationInTiming={300}
-                animationOutTiming={700}
+                animationOutTiming={300}
                 onModalHide={this.back}
+                hideModalContentWhileAnimating={true} 
                 style={{ justifyContent: 'flex-end', margin: 0 }}
                 onDismiss={this.back}>
                 <View style={styles.modalContainer}>
@@ -67,36 +99,39 @@ export class ConvertModal extends Component {
                             hitSlop={{ top: 50, bottom: 50, left: 50, right: 50 }}
                             style={styles.modalHeaderLeft}>
                             <OpenSansText style={styles.headerLeft}>
-                              {formatMessage(message.today)}
-                        </OpenSansText>
+                                {formatMessage(message.today)}
+                            </OpenSansText>
                         </TouchableOpacity>
 
                         <View style={styles.modalHeaderCenter}>
-                            <SwitchButton
-                                onValueChange={(val) => {
-                                    this.setState({ activeSwitch: val });
-                                }      // this is necessary for this component
-                                }
-                                useNativeDriver={true}
-                                text1={formatMessage(message.solar)}
-                                text2={formatMessage(message.lunar)}
-                                switchWidth={122}
-                                switchHeight={height / 22.5}
-                                switchdirection='rtl'
-                                switchBorderRadius={16}
-                                switchSpeedChange={0}
-                                switchBackgroundColor='#d2d2d2'
-                                btnBackgroundColor='white'
-                                fontColor='#000000'
-                                activeFontColor='#000000'
-                            />
+                            {!this.props.hideOption
+                                && <SwitchButton
+                                    onValueChange={(val) => {
+                                        this.convert.switch(val);
+                                        this.setState({ activeSwitch: val });
+                                    }      // this is necessary for this component
+                                    }
+                                    useNativeDriver={true}
+                                    text1={formatMessage(message.solar)}
+                                    text2={formatMessage(message.lunar)}
+                                    switchWidth={122}
+                                    switchHeight={height / 22.5}
+                                    switchdirection='rtl'
+                                    switchBorderRadius={16}
+                                    switchSpeedChange={0}
+                                    switchBackgroundColor='#d2d2d2'
+                                    btnBackgroundColor='white'
+                                    fontColor='#000000'
+                                    activeFontColor='#000000'
+                                />}
+
 
                         </View>
                         <TouchableOpacity onPress={this.back} hitSlop={{ top: 50, bottom: 50, left: 50, right: 50 }}
-                            style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end'}}>
+                            style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
                             <OpenSansText style={styles.headerRight}>
-                            {formatMessage(message.close)}
-                        </OpenSansText>
+                                {formatMessage(message.close)}
+                            </OpenSansText>
                         </TouchableOpacity>
 
                     </View>

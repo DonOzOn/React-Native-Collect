@@ -1,21 +1,24 @@
 import { _28starBad, _28starBadEN, _28starGood, _28starGoodEN, can, canEn, chi, chiEN, chiENG, chiofMonth, tietkhi } from './LunarWord';
 
+import _ from 'lodash'
 import configuration from '../../../../configuration';
+import moment from 'moment';
 
 export const hoangdao = {
-    '1': ['Tý', 'Sửu', 'Tị', 'Mùi'],
+    '1': ['Tý', 'Sửu', 'Tỵ', 'Mùi'],
     '2': ['Dần', 'Mão', 'Mùi', 'Dậu'],
-    '3': ['Thìn', 'Tị', 'Dậu', 'Hợi'],
+    '3': ['Thìn', 'Tỵ', 'Dậu', 'Hợi'],
     '4': ['Ngọ', 'Mùi', 'Sửu', 'Dậu'],
     '5': ['Thân', 'Dậu', 'Sửu', 'Mão'],
-    '6': ['Tuất', 'Hợi', 'Mão', 'Tị'],
-    '7': ['Tý', 'Sửu', 'Tị', 'Mùi'],
+    '6': ['Tuất', 'Hợi', 'Mão', 'Tỵ'],
+    '7': ['Tý', 'Sửu', 'Tỵ', 'Mùi'],
     '8': ['Dần', 'Mão', 'Mùi', 'Dậu'],
-    '9': ['Thìn', 'Tị', 'Dậu', 'Hợi'],
+    '9': ['Thìn', 'Tỵ', 'Dậu', 'Hợi'],
     '10': ['Ngọ', 'Mùi', 'Sửu', 'Dậu'],
     '11': ['Thân', 'Dậu', 'Sửu', 'Mão'],
-    '12': ['Tuất', 'Hợi', 'Mão', 'Tị'],
+    '12': ['Tuất', 'Hợi', 'Mão', 'Tỵ'],
 };
+
 
 export const hoangdaoEn = {
     '1': ['Rat', 'Ox', 'Snake', 'Goat'],
@@ -109,6 +112,67 @@ export const getCanHour = (year, month, date) => {
     const jd = calculateJuliusDay(year, month, date);
     return can[((jd - 1) * 2) % 10];
 };
+
+
+const controlCanArr = (listCan, number) => {
+    let newArr = [...listCan]
+    for (let index = 0; index < number; index++) {
+        newArr.splice(0, 2)
+        newArr = [...newArr, ..._.take(newArr, 2)]
+    }
+    return newArr;
+}
+
+const getChiIndex = () => {
+    let time = moment().hours();
+    if (1 <= time && time < 3) {
+        return 1
+    } else if (3 <= time && time < 5) {
+        return 2
+    } else if (5 <= time && time < 7) {
+        return 3
+    } else if (7 <= time && time < 9) {
+        return 4
+    } else if (9 <= time && time < 11) {
+        return 5
+    } else if (11 <= time && time < 13) {
+        return 6
+    } else if (13 <= time && time < 15) {
+        return 7
+    } else if (15 <= time && time < 17) {
+        return 8
+    } else if (17 <= time && time < 19) {
+        return 9
+    } else if (19 <= time && time < 21) {
+        return 10
+    } else if (21 <= time && time < 23) {
+        return 11
+    } else {
+        return 0
+    }
+}
+
+export const canHour = (canDay) => {
+    let listCanHour = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý']
+    listCanHour = [...listCanHour, ..._.take(listCanHour, 2)];
+    if (canDay === 'Giáp' || canDay === 'Kỷ') {
+        listCanHour = [...listCanHour];
+    } else if (canDay === 'Ất' || canDay === 'Canh') {
+        listCanHour = controlCanArr(listCanHour, 1);
+    } else if (canDay === 'Bính' || canDay === 'Tân') {
+        listCanHour = controlCanArr(listCanHour, 2);
+    } else if (canDay === 'Đinh' || canDay === 'Nhâm') {
+        listCanHour = controlCanArr(listCanHour, 3);
+    } else {
+        listCanHour = controlCanArr(listCanHour, 4);
+    }
+    return listCanHour[getChiIndex()];
+};
+
+
+
+
+
 const calculateJuliusDay = (yy, mm, dd) => {
     var a, y, m, jd;
     a = Math.floor((14 - mm) / 12);
@@ -433,3 +497,70 @@ export const convertSolar2Lunar = (dd, mm, yy, timeZone) => {
     }
     return new Array(lunarDay, lunarMonth, lunarYear);
 };
+export const leapYear = (year) => {
+    return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+}
+
+export const isNhuanYear = year => {
+    const remain = year % 19;
+    switch (remain) {
+        case 0:
+            return true;
+        case 3:
+            return true;
+        case 6:
+            return true;
+        case 9:
+            return true;
+        case 11:
+            return true;
+        case 14:
+            return true;
+        case 17:
+            return true;
+        default:
+            return false;
+    }
+};
+
+
+const hacDaoJan = ['Ngọ', 'Mão', 'Hợi', 'Dậu']
+const hacDaoFeb = ['Thân', 'Tỵ', 'Sửu', 'Hợi']
+const hacDaoMar = ['Tuất', 'Mùi', 'Sửu', 'Mão']
+const hacDaoJul = ['Tý', 'Dậu', 'Tỵ', 'Mão']
+const hacDaoMay = ['Dần', 'Hợi', 'Mùi', 'Tỵ']
+const hacDaoJun = ['Thìn', 'Sửu', 'Dậu', 'Mùi']
+
+export const checkBadDay = (month, nameAnimal) => {
+    if ((month === 1 || month === 7) && hacDaoJan.includes(nameAnimal)) {
+        return true
+
+    } else
+        if ((month === 2 || month === 8) && hacDaoFeb.includes(nameAnimal)) {
+            return true
+        }
+        else
+            if ((month === 3 || month === 9) && hacDaoMar.includes(nameAnimal)) {
+                return true
+
+            }
+            else
+                if ((month === 4 || month === 10) && hacDaoJul.includes(nameAnimal)) {
+                    return true
+
+                }
+                else
+                    if ((month === 5 || month === 11) && hacDaoMay.includes(nameAnimal)) {
+                        return true
+
+                    }
+                    else
+                        if (month === 6 || month === 12 && hacDaoJun.includes(nameAnimal)) {
+                            return true
+
+                        } else {
+                            return false
+                        }
+
+
+}

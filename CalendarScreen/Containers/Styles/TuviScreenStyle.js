@@ -168,9 +168,9 @@ export default StyleSheet.create({
     daynameShow: {
         fontSize: 13,
         // marginLeft: 2,
-       
+
     },
-    eventContainerOut: { flex: 1, paddingTop: 21, paddingBottom: width / 16.8, borderBottomWidth: 7, borderBottomColor: '#eff0ef' },
+    eventContainerOut: { flex: 1, paddingTop: 21, paddingBottom: width / 16.8, borderBottomWidth: 7, borderBottomColor: '#eff0ef', borderTopWidth: 7, borderTopColor: '#eff0ef', marginTop: 16 },
     noteContainer: { flex: 1, paddingTop: 20, paddingBottom: width / 10.3, borderBottomWidth: 7, borderBottomColor: '#eff0ef' },
     hourLunar: {
         color: '#888888',
@@ -212,7 +212,7 @@ export default StyleSheet.create({
         fontSize: 14,
         textAlign: 'left',
         marginTop: width / 160,
-        transform: [{translateY: 1}]
+        transform: [{ translateY: 1 }]
         // marginLeft: -5
     },
     divide: {
@@ -253,7 +253,8 @@ export default StyleSheet.create({
     },
     ceremoneyContainer: {
         flexDirection: 'row',
-        flex: 1, alignItems: 'flex-start'
+        flex: 1, alignItems: 'center',
+        marginBottom:8
     },
     dateChoose: {
         borderRadius: 100,
@@ -274,8 +275,8 @@ export default StyleSheet.create({
         position: 'absolute',
         right: 0, bottom: 0
     },
-    hoverCenter: { backgroundColor: 'rgba(1,92,208,0.08)', height: height / 22.5, width: '100%', position: 'absolute', zIndex: -100 },
-    hoverTop: { backgroundColor: 'white', height: height / 22.5, width: width, top: 0, position: 'absolute', zIndex: 100, opacity: 0.7 },
+    hoverCenter: { backgroundColor: 'rgba(1,92,208,0.08)', height: height / 22.5, width: '100%', position: 'absolute', zIndex: -1 },
+    hoverTop: { backgroundColor: 'white', height: height / 22.5, width: width, top: 0, position: 'absolute', opacity: 0.7, zIndex: 1 },
     hoverBottom: { backgroundColor: 'rgba(255,255,255,0.7)', height: height / 22.5, width: '100%', position: 'absolute', bottom: 0 },
     emptyText: {
         color: 'gray',
@@ -283,6 +284,9 @@ export default StyleSheet.create({
     },
     inforTopContainer: {
         position: 'relative',
-        height: 88.857
+        height: 88.857,
+        // borderBottomWidth: 7, borderBottomColor: '#eff0ef',
+        // paddingBottom: width / 16.8,
+
     }
 });

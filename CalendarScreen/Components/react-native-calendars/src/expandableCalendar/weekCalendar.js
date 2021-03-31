@@ -8,13 +8,15 @@ import Week from '../expandableCalendar/week';
 import XDate from 'xdate';
 import _ from 'lodash';
 import asCalendarConsumer from './asCalendarConsumer';
+import { enableScreens } from 'react-native-screens';
 import moment from 'moment';
 import styleConstructor from './style';
 import { weekDayNames } from '../dateutils';
 
+enableScreens();
 const commons = require('./commons');
 const UPDATE_SOURCES = commons.UPDATE_SOURCES;
-const NUMBER_OF_PAGES = 1; // must be a positive number
+const NUMBER_OF_PAGES = 2; // must be a positive number
 
 /**
  * @description: Week calendar component

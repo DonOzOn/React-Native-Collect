@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import {Text, View} from 'react-native';
+import React, { Component } from 'react';
+import { Text, View } from 'react-native';
 
 import Calendar from '../calendar';
 import styleConstructor from './style';
@@ -60,7 +60,7 @@ class CalendarListItem extends Component {
         <Calendar
           testID={`${this.props.testID}_${row}`}
           theme={this.props.theme}
-          style={[{height: this.props.calendarHeight, width: this.props.calendarWidth}, this.style.calendar, this.props.style]}
+          style={[{ height: this.props.calendarHeight, width: this.props.calendarWidth }, this.style.calendar, this.props.style]}
           current={row}
           currentDate={this.props.currentDate}
           hideArrows={this.props.hideArrows}
@@ -78,9 +78,10 @@ class CalendarListItem extends Component {
           monthFormat={this.props.monthFormat}
           dayComponent={this.props.dayComponent}
           disabledByDefault={this.props.disabledByDefault}
+          showSixWeeks={this.props.showSixWeeks}
           showWeekNumbers={this.props.showWeekNumbers}
           dynamicHeight={true}
-          currentMonthSelect ={this.props.currentMonth}
+          currentMonthSelect={this.props.currentMonth}
           renderArrow={this.props.renderArrow}
           onPressArrowLeft={this.props.horizontal ? this.onPressArrowLeft : this.props.onPressArrowLeft}
           onPressArrowRight={this.props.horizontal ? this.onPressArrowRight : this.props.onPressArrowRight}
@@ -96,7 +97,7 @@ class CalendarListItem extends Component {
       const text = row.toString();
 
       return (
-        <View style={[{height: this.props.calendarHeight, width: this.props.calendarWidth}, this.style.placeholder]}>
+        <View style={[{ height: this.props.calendarHeight, width: this.props.calendarWidth }, this.style.placeholder]}>
           <Text allowFontScaling={false} style={this.style.placeholderText}>{text}</Text>
         </View>
       );

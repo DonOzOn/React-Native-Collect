@@ -349,8 +349,8 @@ class CalendarList extends Component {
           style={[this.style.container, this.props.style]}
           initialListSize={this.props.pastScrollRange + this.props.futureScrollRange + 1} // ListView deprecated
           data={this.state.rows}
-          //snapToAlignment='start'
-          //snapToInterval={this.calendarHeight}
+          snapToAlignment='start'
+          snapToInterval={this.calendarHeight}
           removeClippedSubviews={this.props.removeClippedSubviews}
           pageSize={1} // ListView deprecated
           horizontal={this.props.horizontal}

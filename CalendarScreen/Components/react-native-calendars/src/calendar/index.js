@@ -17,9 +17,10 @@ import dateutils from '../dateutils';
 import moment from 'moment';
 import shouldComponentUpdate from './updater';
 import styleConstructor from './style';
+import _ from 'lodash'
 
 //Fallback for react-native-web or when RN version is < 0.44
-const {View, ViewPropTypes, Dimensions} = ReactNative;
+const {View, ViewPropTypes, Dimensions, Text} = ReactNative;
 const {width, height} = Dimensions.get('window');
 
 const viewPropTypes =
@@ -378,22 +379,25 @@ class Calendar extends Component {
   }
 
   render() {
-    const {dynamicHeight, currentMonthSelect} = this.props;
     const {currentMonth} = this.state;
     const {
       firstDay,
       showSixWeeks,
       hideExtraDays,
       enableSwipeMonths,
+      dynamicHeight, currentMonthSelect
     } = this.props;
     const shouldShowSixWeeks = showSixWeeks && !hideExtraDays;
     const days = dateutils.page(currentMonth, firstDay, shouldShowSixWeeks);
 
-    const weeks = [];
+    let weeks = [];
     while (days.length) {
       weeks.push(this.renderWeek(days.splice(0, 7), weeks.length));
     }
 
+    if(weeks.length > 6 && shouldShowSixWeeks){
+        weeks = _.take(weeks, 6)
+    }
     let indicator;
     let heightValue;
     const current = parseDate(this.props.current);
@@ -412,8 +416,10 @@ class Calendar extends Component {
       }
     }
     if (moment(new Date(currentMonth)).format('MM') === moment(this.props.currentDate).format('MM')) {
-      heightValue = weeks.length * (ReactNative.Platform.OS === 'android' ?  height/15 : height/15);
+      heightValue = weeks.length * height/15;
     }
+
+
     const GestureComponent = enableSwipeMonths ? GestureRecognizer : View;
     const gestureProps = enableSwipeMonths
       ? {onSwipe: (direction, state) => this.onSwipe(direction, state)}
@@ -448,13 +454,13 @@ class Calendar extends Component {
           style={[
             this.style.container,
             this.props.style,
-            {
-              height: heightValue
-                ? height < 700
-                  ? heightValue + 40
-                  : heightValue
-                : 200,
-            },
+            // {
+            //   height: heightValue
+            //     ? height < 700
+            //       ? heightValue + 40
+            //       : heightValue
+            //     : 260,
+            // },
           ]}
           accessibilityElementsHidden={this.props.accessibilityElementsHidden} // iOS
           importantForAccessibility={this.props.importantForAccessibility} // Android
@@ -464,7 +470,7 @@ class Calendar extends Component {
           ) : (
             <CalendarHeader {...headerProps} />
           )}
-          <View style={this.style.monthView}>{weeks}</View>
+          <View style={[this.style.monthView]}>{weeks}</View>
         </View>
       </GestureComponent>
     );

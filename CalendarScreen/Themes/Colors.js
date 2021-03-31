@@ -26,6 +26,14 @@ const colors = {
   selectedDate: '#015cd0',
   dateBg: 'rgba(7,83,236,0.67)',
   warmgrey: '#888888',
+  brownish_grey: '#6e6e6e',
+  blue: '#015cd0',
+  light_grey: '#eff0ef',
+  steel_grey: '#7d7e7e',
+  white_f8: '#f8f8f8',
+  warm_grey_8: '#8b8b8b',
+  white_two: '#dddddd',
+  greyish_brown: '#4d4d4d'
 }
 
 export default colors

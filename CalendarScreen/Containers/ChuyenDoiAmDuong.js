@@ -1,8 +1,10 @@
 import "moment/min/locales";
 import 'moment/locale/vi';
 
+import { CalendarChinese, CalendarVietnamese } from 'date-chinese';
 import {
     Dimensions,
+    Easing,
     Platform,
     SafeAreaView,
     View,
@@ -18,7 +20,6 @@ import {
 } from '../Transforms/ConvertToCanchi';
 import React, { Component, PureComponent } from 'react';
 
-import { CalendarChinese } from 'date-chinese';
 import CalendarItem from '../Components/CalendarItem';
 import CalendarItemDay from '../Components/CalendarItemDay';
 import Carousel from 'react-native-snap-carousel';
@@ -26,7 +27,21 @@ import configuration from '../../../../configuration';
 import moment from 'moment';
 import month from '../Fixtures/month.json';
 import styles from './Styles/TuviScreenStyle';
+const monthLunar2022 = {
+    1: 30,
+    2: 29,
+    3: 30,
+    4: 29,
+    5: 30,
+    6: 30,
+    7: 29,
+    8: 30,
+    9: 29,
+    10: 30,
+    11: 29,
+    12: 30
 
+}
 // import AppHeader from '../../AppHeader';
 const { width, height } = Dimensions.get('window');
 const MAX_YEAR = 2100
@@ -34,23 +49,25 @@ const MIN_YEAR = 1900
 class ChuyenDoiAmDuong extends PureComponent {
     constructor(props) {
         super(props);
-        this.cal = new CalendarChinese();
+        this.cal = new CalendarVietnamese();
         this.mode = 'duong';
         this.year = [];
         this.day = [];
         this.dayLunar = [];
         this.monthLunar = [];
-        this.generateYear(moment().year());
 
-        for (let index = 1; index <= moment().daysInMonth(); index++) {
+        this.generateYear(moment(this.props.selectedDate).year());
+
+        for (let index = 1; index <= moment(this.props.selectedDate).daysInMonth(); index++) {
+
             this.day.push({
                 value: index,
                 label: index,
             });
         }
 
-        this.generateLunarDay(moment().month(), moment().year());
-        this.generateLunarMonth(moment().year());
+        this.generateLunarDay(moment(this.props.selectedDate).month(), moment(this.props.selectedDate).year(), false, props.activeSwitch);
+        this.generateLunarMonth(moment(this.props.selectedDate).year());
 
         this.state = {
             markedDates: {},
@@ -71,6 +88,7 @@ class ChuyenDoiAmDuong extends PureComponent {
             lunarMonth: 0,
             lunarYear: 0,
             monthLunar: this.monthLunar,
+            checkReset: false,
             monthIndex: month.findIndex(
                 item => item.value === moment(this.props.selectedDate).month(),
             ),
@@ -78,12 +96,24 @@ class ChuyenDoiAmDuong extends PureComponent {
                 item => item.value === moment(this.props.selectedDate).year(),
             ),
             monthLunarIndex: this.monthLunar.findIndex(
-                item => item.value === moment(this.props.selectedDate).month(),
+                item => item.value === this.defineLunarYear().month
             ),
             yearLunarIndex: this.year.findIndex(
-                item => item.value === moment(this.props.selectedDate).year(),
+                item => item.value === this.defineLunarYear().year,
             ),
         };
+    }
+    
+    defineLunarYear = () => {
+        this.cal.fromDate(new Date(this.props.selectedDate))
+        const numberYearDiffLunar = 1983 // con số chênh lệch của năm âm, cần cộng số này để lấy giá trị convert năm dương
+        const [cycle, year, month, leap, day] = this.cal.get()
+        return {
+            year: year + numberYearDiffLunar,
+            month,
+            day,
+            dateString: `${year + numberYearDiffLunar}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`
+        }
     }
 
     getNumberOfDayInLunarMonth = (month, year) => {
@@ -124,9 +154,12 @@ class ChuyenDoiAmDuong extends PureComponent {
         }
     };
 
-    generateLunarDay = (month, year) => {
-        const dayinMonth = this.getNumberOfDayInLunarMonth(month, year);
+    generateLunarDay = (monthParam, year, checkReset, checkSwitch) => {
 
+        let dayinMonth = this.getNumberOfDayInLunarMonth(monthParam, year);
+        if (year == 2022) {
+            dayinMonth = monthLunar2022[monthParam]
+        }
         if (dayinMonth > this.dayLunar.length) {
             for (
                 let index = this.dayLunar.length + 1;
@@ -147,6 +180,28 @@ class ChuyenDoiAmDuong extends PureComponent {
                 this.dayLunar.splice(index, 1);
             }
         }
+
+        if (checkReset && checkSwitch != 1) {
+            const lunar = convertSolar2Lunar(
+                this.day[
+                    this.day.findIndex(
+                        item => item.value === moment().date())
+                ].value,
+                month[month.findIndex(
+                    item => item.value === moment().month()
+                )].value + 1,
+                this.year[this.year.findIndex(
+                    item => item.value === moment().year(),
+                )].value,
+                7,
+            );
+            this.carouselDayLunar.snapToItem(this.dayLunar.findIndex(
+                item => item.value === lunar[0],
+            ), true, true)
+        }
+        // }
+
+
     };
 
     isNhuanYear = year => {
@@ -335,11 +390,11 @@ class ChuyenDoiAmDuong extends PureComponent {
             this.dayLunar[
                 dayIndex > this.dayLunar.length - 1 ? this.dayLunar.length - 1 : dayIndex
             ].value,
-            this.monthLunar[monthIndex > this.monthLunar.length - 1 ? this.monthLunar.length - 1 : monthIndex].isLeap
-                ? this.monthLunar[monthIndex > this.monthLunar.length - 1 ? this.monthLunar.length - 1 : monthIndex].value - 1
-                : this.monthLunar[monthIndex > this.monthLunar.length - 1 ? this.monthLunar.length - 1 : monthIndex].value,
+            this.monthLunar[monthIndex].isLeap
+                ? this.monthLunar[monthIndex].value - 1
+                : this.monthLunar[monthIndex].value,
             this.year[yearIndex].value,
-            this.monthLunar[monthIndex > this.monthLunar.length - 1 ? this.monthLunar.length - 1 : monthIndex].isLeap,
+            this.monthLunar[monthIndex].isLeap,
             7,
         );
         this.afterSelectMonthCallback(
@@ -397,11 +452,20 @@ class ChuyenDoiAmDuong extends PureComponent {
         } else {
             moment.locale('en')
         }
+
+        let date = convertLunar2Solar(
+            this.dayLunar[index > this.dayLunar.lenght - 1 ? this.dayLunar.lenght - 1 : index].value,
+            this.monthLunar[this.state.monthLunarIndex].isLeap
+                ? this.monthLunar[this.state.monthLunarIndex > this.monthLunar.length - 1 ? this.monthLunar.length - 1 : this.state.monthLunarIndex].value - 1
+                : this.monthLunar[this.state.monthLunarIndex > this.monthLunar.length - 1 ? this.monthLunar.length - 1 : this.state.monthLunarIndex].value,
+            this.year[this.state.yearLunarIndex].value,
+            this.monthLunar[this.state.monthLunarIndex].isLeap,
+            7,
+        );
         let dayName = this.toUpper(
             moment(
-                `${this.year[this.state.yearIndex > this.year.length - 1 ? this.year.length - 1 : this.state.yearIndex].value
-                }-${month[this.state.monthIndex > this.state.monthIndex.length - 1 ? this.state.monthIndex.length - 1 : this.state.monthIndex].value +
-                1}-${this.dayLunar[index > this.dayLunar.length - 1 ? this.dayLunar.length - 1 : index].value}`, 'YYYY-MM-DD'
+                `${date[2]
+                }-${date[1]}-${date[0]}`, 'YYYY-MM-DD'
             ).format('dddd')
         );
 
@@ -411,6 +475,7 @@ class ChuyenDoiAmDuong extends PureComponent {
     getItemLayout = (data, index) => ({ length: height / 22.5, offset: height / 22.5 * index, index });
 
     afterSelectMonthCallback = monthIndex => {
+
         const dayinMonth = moment(
             `${this.year[this.state.yearIndex].value}-${month[monthIndex > month.length - 1 ? month.length - 1 : monthIndex]
                 .value + 1}`,
@@ -435,6 +500,15 @@ class ChuyenDoiAmDuong extends PureComponent {
             ) {
                 this.day.splice(index, 1);
             }
+            if (this.state.dayIndex > dayinMonth - 1 && !this.state.checkReset) {
+                this.setState({ dayIndex: dayinMonth - 1 })
+            }
+        }
+
+        if (this.state.checkReset && this.props.activeSwitch === 1) {
+            this.carouselDayDuong.snapToItem(this.day.findIndex(
+                item => item.value === moment().date(),
+            ), true, true)
         }
     };
 
@@ -442,52 +516,93 @@ class ChuyenDoiAmDuong extends PureComponent {
         this.generateLunarDay(
             this.monthLunar[monthIndex > this.monthLunar.length - 1 ? this.monthLunar.length - 1 : monthIndex].value,
             this.year[this.state.yearLunarIndex].value,
+            this.state.checkReset,
+            this.props.activeSwitch
         );
     };
 
-    reset = () => {
-        const { activeSwitch } = this.props;
-        if (activeSwitch === 1) {
-            this.carouselYearDuong.snapToItem(this.year.findIndex(
-                item => item.value === moment().year(),
-            ), true, true)
-            this.carouselMonthDuong.snapToItem(month.findIndex(
-                item => item.value == moment().month(),
-            ), true, true)
-            this.carouselDayDuong.snapToItem(this.day.findIndex(
-                item => item.value === moment().date(),
-            ), true, true)
+    switch = (val) => {
+        if (val == 2) {
             this.toLichAm(
                 this.state.dayIndex,
                 this.state.monthIndex,
                 this.state.yearIndex,
+                { dayIndex: this.state.dayIndex },
             );
         } else {
-            const lunar = convertSolar2Lunar(
-                this.day[
-                    this.day.findIndex(
-                        item => item.value === moment().date())
-                ].value,
-                month[month.findIndex(
-                    item => item.value === moment().month()
-                )].value + 1,
-                this.year[this.year.findIndex(
-                    item => item.value === moment().year(),
-                )].value,
-                7,
-            );
-            this.carouselYearLunar.snapToItem(this.year.findIndex(
-                item => item.value === lunar[2],
-            ), true, true)
-            this.carouselMonthLunar.snapToItem(this.monthLunar.findIndex(
-                item => item.value === lunar[1],
-            ), true, true)
-
-            this.carouselDayLunar.snapToItem(this.dayLunar.findIndex(
-                item => item.value === lunar[0],
-            ), true, true)
+            this.toLichDuong(
+                this.state.dayLunarIndex,
+                this.state.monthLunarIndex,
+                this.state.yearLunarIndex,
+                { dayLunarIndex: this.state.dayLunarIndex },
+            )
         }
+    }
 
+
+    reset = () => {
+        const { activeSwitch } = this.props;
+        this.setState({ checkReset: true }, () => {
+            if (activeSwitch === 1) {
+                this.carouselYearDuong.snapToItem(this.year.findIndex(
+                    item => item.value === moment().year(),
+                ), true, false)
+                this.setState({
+                    yearIndex: this.year.findIndex(
+                        item => item.value === moment().year(),
+                    )
+                })
+                this.carouselMonthDuong.snapToItem(month.findIndex(
+                    item => item.value == moment().month(),
+                ), true, true)
+
+                if (month.findIndex(
+                    item => item.value == moment().month(),
+                ) == this.state.monthIndex) {
+                    this.carouselDayDuong.snapToItem(this.day.findIndex(
+                        item => item.value === moment().date(),
+                    ), true, true)
+                }
+
+                this.toLichAm(
+                    this.state.dayIndex,
+                    this.state.monthIndex,
+                    this.state.yearIndex,
+                );
+            } else {
+                const lunar = convertSolar2Lunar(
+                    this.day[
+                        this.day.findIndex(
+                            item => item.value === moment().date())
+                    ].value,
+                    month[month.findIndex(
+                        item => item.value === moment().month()
+                    )].value + 1,
+                    this.year[this.year.findIndex(
+                        item => item.value === moment().year(),
+                    )].value,
+                    7,
+                );
+                if (this.year.findIndex(
+                    item => item.value === lunar[2],
+                ) == this.state.yearLunarIndex) {
+
+                    if (this.monthLunar.findIndex(item => item.value === lunar[1]) == this.state.monthLunarIndex) {
+
+                        this.carouselDayLunar.snapToItem(this.dayLunar.findIndex(
+                            item => item.value === lunar[0],
+                        ), true, true)
+                    } else {
+                        this.carouselMonthLunar.snapToItem(this.monthLunar.findIndex(item => item.value === lunar[1]))
+                    }
+                } else {
+                    this.carouselYearLunar.snapToItem(this.year.findIndex(
+                        item => item.value === lunar[2],
+                    ), true, true)
+                }
+
+            }
+        })
     }
 
     select = () => {
@@ -553,6 +668,7 @@ class ChuyenDoiAmDuong extends PureComponent {
     }
     render() {
         const { activeSwitch } = this.props;
+
         return (
             <SafeAreaView
                 style={{
@@ -578,26 +694,27 @@ class ChuyenDoiAmDuong extends PureComponent {
                             inactiveSlideShift={2}
                             swipeThreshold={400}
                             layout="default"
-                            sliderWidth={width / 3}
+                            // sliderWidth={width / 3}
                             ref={ref => (this.carouselDayDuong = ref)}
                             data={this.day}
                             sliderHeight={(height / 22.5) * 5}
                             // itemWidth={20}
                             itemHeight={height / 22.5}
                             vertical
+                            initialScrollIndex={this.state.dayIndex}
+                            disableIntervalMomentum={true}
                             enableMomentum={true}
                             firstItem={this.state.dayIndex}
-                            // shouldOptimizeUpdates
-                            // nestedScrollEnabled={true}
                             inactiveSlideOpacity={0.5}
                             initialNumToRender={5}
                             slideStyle={{
                                 alignItems: 'center'
                                 , justifyContent: 'center',
                                 marginLeft: -12,
-                                flex:1
+                                flex: 1,
 
                             }}
+
                             keyExtractor={(index, item) => item + index.toString()}
                             // removeClippedSubviews={true}
                             getItemLayout={this.getItemLayout}
@@ -605,6 +722,10 @@ class ChuyenDoiAmDuong extends PureComponent {
                             renderItem={this._renderItemDay}
                             updateCellsBatchingPeriod={0}
                             onBeforeSnapToItem={index => {
+                                this.setState({
+                                    dayIndex: index,
+                                    checkReset: false
+                                })
                                 this.toLichAm(
                                     index,
                                     this.state.monthIndex,
@@ -629,24 +750,27 @@ class ChuyenDoiAmDuong extends PureComponent {
                             // shouldOptimizeUpdates
                             updateCellsBatchingPeriod={0}
                             getItemLayout={this.getItemLayout}
+                            // disableIntervalMomentum={true}
                             // nestedScrollEnabled={true}
                             keyExtractor={(index, item) => item + index.toString()}
                             initialNumToRender={5}
-                            slideStyle={{ alignItems: 'center', justifyContent: 'center', paddingRight: width / 17,  flex:3 }}
+                            slideStyle={{ alignItems: 'center', justifyContent: 'center', paddingRight: width / 17, flex: 3 }}
                             maxToRenderPerBatch={5}
                             activeSlideOffset={2}
-                            enableMomentum={true}
-                            enableSnap={true}
+                            // enableMomentum={true}
                             // removeClippedSubviews={true}
                             renderItem={this._renderItemMonth}
                             onBeforeSnapToItem={index => {
-                                this.afterSelectMonthCallback(index);
+
+                                this.setState({ monthIndex: index })
                                 this.toLichAm(
                                     this.state.dayIndex,
                                     index,
                                     this.state.yearIndex,
                                     { monthIndex: index },
                                 );
+
+                                this.afterSelectMonthCallback(index);
                             }}
                         />
                         <Carousel
@@ -661,7 +785,7 @@ class ChuyenDoiAmDuong extends PureComponent {
                             vertical
                             activeSlideOffset={2}
                             inactiveSlideOpacity={0.5}
-                            enableMomentum={true}
+                            // enableMomentum={true}
                             initialNumToRender={5}
                             keyExtractor={(index, item) => item + index.toString()}
                             // nestedScrollEnabled={true}
@@ -669,21 +793,21 @@ class ChuyenDoiAmDuong extends PureComponent {
                             maxToRenderPerBatch={5}
                             // removeClippedSubviews={true}
                             firstItem={this.state.yearIndex}
-                            slideStyle={{ alignItems: 'flex-end', justifyContent: 'center', paddingRight: width / 20, flex:1 }}
+                            slideStyle={{ alignItems: 'flex-end', justifyContent: 'center', paddingRight: width / 20, flex: 1 }}
                             renderItem={this._renderItemYear}
                             onBeforeSnapToItem={index => {
-                                this.afterSelectYearCallback(index);
+
+                                this.setState({ yearIndex: index })
                                 this.toLichAm(
                                     this.state.dayIndex,
                                     this.state.monthIndex,
                                     index,
                                     { yearIndex: index },
                                 );
+                                this.afterSelectYearCallback(index);
                             }}
                         />
                         <View style={styles.hoverBottom} />
-
-                        <View style={styles.centerView} />
                     </View>
                 </View> : <View style={styles.calendarCont}>
                         <View
@@ -704,7 +828,7 @@ class ChuyenDoiAmDuong extends PureComponent {
                                 itemHeight={height / 22.5}
                                 swipeThreshold={400}
                                 vertical
-                                activeSlideOffset={2}
+                                activeSlideOffset={5}
                                 updateCellsBatchingPeriod={0}
                                 // nestedScrollEnabled={true}
                                 initialNumToRender={5}
@@ -716,20 +840,22 @@ class ChuyenDoiAmDuong extends PureComponent {
                                 }}
                                 keyExtractor={(index, item) => item + index.toString()}
                                 getItemLayout={this.getItemLayout}
-                                enableMomentum={true}
+                                // enableMomentum={true}
                                 inactiveSlideOpacity={0.5}
                                 maxToRenderPerBatch={5}
                                 // removeClippedSubviews={true}
                                 firstItem={this.state.dayLunarIndex}
-                                shouldOptimizeUpdates
+                                // shouldOptimizeUpdates
                                 renderItem={this._renderItemDayLunar}
-                                onBeforeSnapToItem={index =>
+                                onBeforeSnapToItem={index => {
+                                    this.setState({ dayLunarIndex: index, checkReset: false })
                                     this.toLichDuong(
                                         index,
                                         this.state.monthLunarIndex,
                                         this.state.yearLunarIndex,
                                         { dayLunarIndex: index },
                                     )
+                                }
                                 }
                             />
                             <View style={styles.hoverCenter} />
@@ -742,12 +868,13 @@ class ChuyenDoiAmDuong extends PureComponent {
                                 swipeThreshold={400}
                                 itemHeight={height / 22.5}
                                 vertical
-                                activeSlideOffset={2}
+                                activeSlideOffset={5}
                                 getItemLayout={this.getItemLayout}
-                                enableMomentum={true}
+                                // enableMomentum={true}
                                 inactiveSlideOpacity={0.5}
                                 updateCellsBatchingPeriod={0}
                                 firstItem={this.state.monthLunarIndex}
+                                initialScrollIndex={this.state.monthLunarIndex}
                                 // shouldOptimizeUpdates
                                 // nestedScrollEnabled={true}
                                 keyExtractor={(index, item) => item + index.toString()}
@@ -755,12 +882,12 @@ class ChuyenDoiAmDuong extends PureComponent {
                                 maxToRenderPerBatch={5}
                                 slideStyle={{
                                     alignItems: 'center', justifyContent: 'center'
-                                    , paddingRight: width / 17,
-                                    flex: 3
+                                    , paddingRight: width / 17, flex: 3
                                 }}
                                 // removeClippedSubviews={true}
                                 renderItem={this._renderItemMonthLunar}
                                 onBeforeSnapToItem={index => {
+                                    this.setState({ monthLunarIndex: index })
                                     this.afterSelectMonthLunarCallback(index);
                                     this.toLichDuong(
                                         this.state.dayLunarIndex,
@@ -785,15 +912,34 @@ class ChuyenDoiAmDuong extends PureComponent {
                                 enableMomentum={true}
                                 firstItem={this.state.yearLunarIndex}
                                 updateCellsBatchingPeriod={0}
-                                // shouldOptimizeUpdates
+                                // shouldOptimizeUpdates 
                                 keyExtractor={(index, item) => item + index.toString()}
                                 renderItem={this._renderItemYearLunar}
                                 initialNumToRender={5}
                                 maxToRenderPerBatch={5}
                                 // removeClippedSubviews={true}
-                                slideStyle={{ alignItems: 'flex-end', justifyContent: 'center', paddingRight: width / 20, flex:1 }}
+                                slideStyle={{ alignItems: 'flex-end', justifyContent: 'center', paddingRight: width / 20, flex: 1 }}
                                 onBeforeSnapToItem={index => {
-                                    this.afterSelectYearLunarCallback(index);
+                                    this.setState({ yearLunarIndex: index }, () => {
+                                        const lunar = convertSolar2Lunar(
+                                            this.day[
+                                                this.day.findIndex(
+                                                    item => item.value === moment().date())
+                                            ].value,
+                                            month[month.findIndex(
+                                                item => item.value === moment().month()
+                                            )].value + 1,
+                                            this.year[this.year.findIndex(
+                                                item => item.value === moment().year(),
+                                            )].value,
+                                            7,
+                                        );
+                                        if (this.state.checkReset) {
+                                            this.carouselMonthLunar.snapToItem(this.monthLunar.findIndex(
+                                                item => item.value === lunar[1],
+                                            ), true, true)
+                                        }
+                                    })
                                     this.toLichDuong(
                                         this.state.dayLunarIndex,
                                         this.state.monthLunarIndex,
@@ -803,8 +949,6 @@ class ChuyenDoiAmDuong extends PureComponent {
                                 }}
                             />
                             <View style={styles.hoverBottom} />
-
-                            <View style={styles.centerView} />
                         </View>
                     </View>}
 

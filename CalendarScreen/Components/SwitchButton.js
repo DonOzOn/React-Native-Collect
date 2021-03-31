@@ -14,7 +14,8 @@ import PropTypes from 'prop-types';
 export default class SwitchButton extends Component {
 
     static propTypes = {
-        onValueChange: PropTypes.func
+        onValueChange: PropTypes.func,
+        defaultSwitch: PropTypes.number
     };
 
     static defaultProps = {
@@ -33,6 +34,45 @@ export default class SwitchButton extends Component {
         };
 
         this._switchDirection = this._switchDirection.bind(this);
+    }
+
+    componentDidMount() {
+
+    }
+
+    UNSAFE_componentWillReceiveProps(nextProps) {
+        if (nextProps.defaultSwitch != this.props.defaultSwitch) {
+            if (nextProps.defaultSwitch == 2) {
+                this.switchOn()
+            } else {
+                this.switchOff()
+            }
+        }
+
+    }
+
+    switchOn = () =>{
+        this.setState({ activeSwitch: 2 })
+                Animated.timing(
+                    this.state.offsetX,
+                    {
+                        toValue: this.props.isBtnRound ? this.props.switchWidth - this.props.switchHeight : (((this.props.switchWidth || this.state.sbWidth) / 2) - 6) * 1,
+                        duration: 100,
+                        useNativeDriver: true
+                    }
+                ).start()
+    }
+
+    switchOff = () =>{
+        this.setState({activeSwitch:1})
+        Animated.timing(
+            this.state.offsetX,
+            {
+                toValue: 0,
+                duration: 100,
+                useNativeDriver: true
+            }
+        ).start()
     }
 
     _switchDirection(direction) {
@@ -63,7 +103,7 @@ export default class SwitchButton extends Component {
             Animated.timing(
                 this.state.offsetX,
                 {
-                    toValue: (((this.props.switchWidth || this.state.sbWidth) / 2) - 6) * dirsign,
+                    toValue: this.props.isBtnRound ? this.props.switchWidth - this.props.switchHeight : (((this.props.switchWidth || this.state.sbWidth) / 2) - 6) * dirsign,
                     duration: this.props.switchSpeedChange || 100,
                     useNativeDriver: true
                 }
@@ -80,7 +120,6 @@ export default class SwitchButton extends Component {
                 }
             ).start();
         }
-
     }
 
     render() {
@@ -101,17 +140,23 @@ export default class SwitchButton extends Component {
 
                         }]}
                     >
-                        <View style={[{ flexDirection: this._switchDirection(this.props.switchdirection || this.state.direction) }]} >
+                        <View style={[{
+                            flexDirection: this._switchDirection(this.props.switchdirection || this.state.direction)
+                        }]} >
 
                             <Animated.View style={{ transform: [{ translateX: this.state.offsetX }] }}>
                                 <View
                                     style={[switchStyles.wayBtnActive,
                                     {
-                                        width: this.props.switchWidth / 2 || this.state.sbWidth / 2,
-                                        height: this.props.switchHeight - 5 || this.state.sbHeight - 5,
+                                        width: this.props.isBtnRound ? this.props.switchHeight + 2 : this.props.switchWidth / 2 || this.state.sbWidth / 2,
+                                        height: this.props.isBtnRound ? this.props.switchHeight + 2 : this.props.switchHeight - 5 || this.state.sbHeight - 5,
                                         borderRadius: this.props.switchBorderRadius !== undefined ? this.props.switchBorderRadius : this.state.sbHeight / 2,
                                         borderColor: this.props.btnBorderColor || "transparent",
-                                        backgroundColor: this.props.btnBackgroundColor || "#00bcd4"
+                                        backgroundColor: this.props.btnBackgroundColor || "#00bcd4",
+                                        marginTop: this.props.isBtnRound ? -1 : 2.5,
+
+                                        marginRight: this.props.isBtnRound ? 0 : 3,
+                                        marginLeft: this.props.isBtnRound ? 0 : 3
                                     }]}
                                 />
                             </Animated.View>
@@ -122,7 +167,7 @@ export default class SwitchButton extends Component {
                                 height: this.props.switchHeight - 3 || this.state.sbHeight - 3,
                                 left: 0,
                                 paddingTop: 5,
-                                transform:[{translateY: 1},{translateX: 1} ],
+                                transform: [{ translateY: 1 }, { translateX: 1 }],
                             }]}
                             >
                                 {this.state.activeSwitch === 1 ? <OpenSansSemiBoldText
